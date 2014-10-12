@@ -8,7 +8,7 @@ import org.baseservices.test.PersistenceFixture
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
 
-import org.mockito.Mockito.{when, verify, verifyNoMoreInteractions}
+import org.mockito.Mockito.{when, verify}
 
 import scala.slick.jdbc.{ResultSetHoldability, ResultSetConcurrency, ResultSetType}
 
@@ -86,6 +86,7 @@ class AuthUserDAOTest extends PersistenceFixture {
   }
 
   test("update user") {
+    prepareMocks()
     val user = AuthUser(uuid, email, password)
     val result = AuthUserDAO.update(user)
     val sqlCaptor = ArgumentCaptor.forClass(classOf[String])
