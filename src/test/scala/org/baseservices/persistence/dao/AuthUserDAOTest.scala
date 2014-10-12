@@ -1,14 +1,16 @@
 package org.baseservices.persistence.dao
 
-import java.sql.Timestamp
+import java.sql.{SQLException, Timestamp}
 import java.util.{Date, Calendar, UUID}
 
 import org.baseservices.persistence.entity.AuthUser
 import org.baseservices.test.PersistenceFixture
 import org.mockito.ArgumentCaptor
-import org.mockito.Matchers._
-
+import org.mockito.Matchers.{any, anyInt, anyString}
 import org.mockito.Mockito.{when, verify}
+
+import org.hamcrest.MatcherAssert._
+import org.hamcrest.Matchers._
 
 import scala.slick.jdbc.{ResultSetHoldability, ResultSetConcurrency, ResultSetType}
 
@@ -46,13 +48,16 @@ class AuthUserDAOTest extends PersistenceFixture {
       any(classOf[ResultSetConcurrency]), any(classOf[ResultSetHoldability]))
 
     verify(mockPreparedStatement).setBytes(anyInt(), bytesCaptor.capture())
-    assertResult(toBytes(uuid))(bytesCaptor.getValue)
-    assertResult(true)(result.isLeft)
+
+    assertThat(bytesCaptor.getValue, is(toBytes(uuid)))
+    assertThat(result.isLeft, is(true))
 
     val foundUser = result.left.get
-    assertResult(uuid)(foundUser.get.uuid)
-    assertResult(email)(foundUser.get.email)
-    assertResult(password)(foundUser.get.password)
+
+    assertThat(foundUser.get.uuid, is(uuid))
+    assertThat(foundUser.get.email, is(email))
+    assertThat(foundUser.get.password, is(password))
+
     assertResult(time)(foundUser.get.createdAt.get)
   }
 
@@ -71,34 +76,50 @@ class AuthUserDAOTest extends PersistenceFixture {
     assertResult(true)(result.isLeft)
 
     val foundUser = result.left.get
-    assertResult(uuid)(foundUser.get.uuid)
-    assertResult(email)(foundUser.get.email)
-    assertResult(password)(foundUser.get.password)
+    assertThat(foundUser.get.uuid, is(uuid))
+    assertThat(foundUser.get.email, is(email))
+    assertThat(foundUser.get.password, is(password))
     assertResult(time)(foundUser.get.createdAt.get)
   }
 
   test("find user with insuffient information") {
-    var user = AuthUser(null, email, null)
+    val user = AuthUser(null, email, null)
     val result = AuthUserDAO.get(user)
 
-    assertResult(true)(result.isRight)
+    assertThat(result.isRight, is(true))
   }
 
   test("insert user") {
     val user = AuthUser(uuid, email, password)
     val result = AuthUserDAO.insert(user)
-    val sqlCaptor = ArgumentCaptor.forClass(classOf[String])
 
-    assertResult(true)(result.isLeft)
+    assertThat(result.isLeft, is(true))
   }
 
   test("update user") {
     prepareMocks()
     val user = AuthUser(uuid, email, password)
     val result = AuthUserDAO.update(user)
-    val sqlCaptor = ArgumentCaptor.forClass(classOf[String])
 
-    assertResult(true)(result.isLeft)
+    assertThat(result.isLeft, is(true))
   }
 
+  test("update user not found") {
+    prepareMocks()
+    when(mockResultSet.next()).thenReturn(false)
+    val user = AuthUser(uuid, email, password)
+    val result = AuthUserDAO.update(user)
+
+    assertThat(result.isRight, is(true))
+  }
+
+  test("update user sql error") {
+    prepareMocks()
+    val errorMessage = "SQL Error"
+    when(mockPreparedStatement.execute()).thenThrow(new SQLException(errorMessage))
+    val user = AuthUser(uuid, email, password)
+    val result = AuthUserDAO.update(user)
+
+    assertThat(result.isRight, is(true))
+  }
 }

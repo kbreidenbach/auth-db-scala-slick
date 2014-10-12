@@ -12,5 +12,6 @@ libraryDependencies ++= Seq(
   "com.github.t3hnar" %% "scala-bcrypt" % "2.4",
   "org.scalatest" % "scalatest_2.11" % "2.2.2" % "test",
   "org.mockito" % "mockito-core" % "1.10.8" % "test",
-  "org.scalamock" % "scalamock-scalatest-support_2.11" % "3.1.4" % "test"
+  "org.scalamock" % "scalamock-scalatest-support_2.11" % "3.1.4" % "test",
+  "org.hamcrest" % "hamcrest-library" % "1.3" % "test"
 )

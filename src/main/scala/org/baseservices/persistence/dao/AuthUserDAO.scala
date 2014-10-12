@@ -36,6 +36,7 @@ object AuthUserDAO extends AuthUserDAO {
       Left(query.firstOption)
     } catch {
       case e: RecordNotFound => Right(e)
+      case e: SQLException => Right(new Error(e))
     }
   }
 
@@ -49,19 +50,19 @@ object AuthUserDAO extends AuthUserDAO {
   }
 
   override def update(user: AuthUser)(implicit session: Session): Either[AuthUser, Error] = {
-    val query = for {foundUsers <- users if foundUsers.uuid === user.uuid} yield foundUsers
-    query.firstOption match {
-      case Some(foundUser) =>
-        val newEmail = if (user.email.isEmpty) foundUser.email else user.email
-        val newPassword = if (user.password.isEmpty) foundUser.password else user.password
-        try {
+    try {
+      val query = for {foundUsers <- users if foundUsers.uuid === user.uuid} yield foundUsers
+      query.firstOption match {
+        case Some(foundUser) =>
+          val newEmail = if (user.email.isEmpty) foundUser.email else user.email
+          val newPassword = if (user.password.isEmpty) foundUser.password else user.password
           val updatedUser = foundUser.copy(email = newEmail, password = newPassword)
           query.update(updatedUser)
           Left(updatedUser)
-        } catch {
-          case e: SQLException => Right(EntityNotWritable(e.getMessage))
-        }
-      case _ => Right(RecordNotFound("User not found"))
+        case _ => Right(RecordNotFound("User not found"))
+      }
+    } catch {
+      case e: SQLException => Right(EntityNotWritable(e.getMessage))
     }
   }
 }

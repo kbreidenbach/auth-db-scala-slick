@@ -1,6 +1,6 @@
 package org.baseservices.test
 
-import java.sql.{ResultSet, PreparedStatement}
+import java.sql.{Connection, ResultSet, PreparedStatement}
 import java.util.UUID
 
 import org.mockito.ArgumentCaptor
@@ -20,11 +20,13 @@ import scala.slick.jdbc.{ResultSetHoldability, ResultSetConcurrency, ResultSetTy
  */
 trait PersistenceFixture extends FunSuite with AnswerSugar with MockitoSugar with BeforeAndAfter with BeforeAndAfterEach {
   implicit val mockSession = mock[Session]
+  val mockConnection = mock[Connection]
   val mockPreparedStatement = mock[PreparedStatement]
   val mockResultSet = mock[ResultSet]
   val statementCaptor = ArgumentCaptor.forClass(classOf[String])
 
   override def beforeEach() {
+    when(mockSession.conn).thenReturn(mockConnection)
     when(mockSession.prepareStatement(anyString(), any(classOf[ResultSetType]),
       any(classOf[ResultSetConcurrency]), any(classOf[ResultSetHoldability]))).thenReturn(mockPreparedStatement)
     when(mockPreparedStatement.getResultSet).thenReturn(mockResultSet)
