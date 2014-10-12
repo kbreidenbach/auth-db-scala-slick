@@ -25,9 +25,11 @@ object AuthUserDAO extends AuthUserDAO {
     try {
       val query = for {
         foundUsers <- users if (user match {
-        case AuthUser(uuid, null, null, _) => foundUsers.uuid === uuid
-        case AuthUser(null, email, password, _) => foundUsers.email === email && foundUsers.password === password
-        case _ => throw RecordNotFound("insufficient information to find Auth User")
+        case AuthUser(uuid, null, null, _) =>
+          foundUsers.uuid === uuid
+        case AuthUser(null, email, password, _) =>
+          if (email == null || password == null) throw RecordNotFound("insufficient information to find Auth User")
+          foundUsers.email === email && foundUsers.password === password
       })
       } yield foundUsers
 

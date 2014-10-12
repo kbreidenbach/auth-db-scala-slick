@@ -77,6 +77,13 @@ class AuthUserDAOTest extends PersistenceFixture {
     assertResult(time)(foundUser.get.createdAt.get)
   }
 
+  test("find user with insuffient information") {
+    var user = AuthUser(null, email, null)
+    val result = AuthUserDAO.get(user)
+
+    assertResult(true)(result.isRight)
+  }
+
   test("insert user") {
     val user = AuthUser(uuid, email, password)
     val result = AuthUserDAO.insert(user)
